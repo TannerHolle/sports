@@ -93,7 +93,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import axios from 'axios'
 import NCAAFootballCard from './components/NCAAFootballCard.vue'
 import NFLGameCard from './components/NFLGameCard.vue'
@@ -113,19 +113,18 @@ export default {
     const error = ref(null)
     const seasonData = ref(null)
     const refreshInterval = ref(null)
-    const selectedFilter = ref('all')
-    const activeLeague = ref('ncaa')
+    const selectedFilter = ref(localStorage.getItem('selectedFilter') || 'top25')
+    const activeLeague = ref(localStorage.getItem('activeLeague') || 'ncaa-football')
 
     // Sports configuration
     const sports = ref([
       {
-        id: 'ncaa',
+        id: 'ncaa-football',
         name: 'NCAA Football',
         icon: '🎓',
         apiUrl: 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard',
         component: 'NCAAFootballCard',
         filters: [
-          { value: 'all', label: 'All Games' },
           { value: 'top25', label: 'Top 25 Only' },
           { value: 'sec', label: 'SEC' },
           { value: 'big10', label: 'Big Ten' },
@@ -160,7 +159,6 @@ export default {
         apiUrl: 'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard',
         component: 'CollegeBasketballCard',
         filters: [
-          { value: 'all', label: 'All Games' },
           { value: 'top25', label: 'Top 25 Only' },
           { value: 'acc', label: 'ACC' },
           { value: 'big10', label: 'Big Ten' },
@@ -210,8 +208,8 @@ export default {
         
         // Handle filtering based on current sport
         switch (activeLeague.value) {
-          case 'ncaa':
-            return filterNCAAGames(competitors, groups, selectedFilter.value)
+          case 'ncaa-football':
+            return filterNCAAFootballGames(competitors, groups, selectedFilter.value)
           case 'nfl':
             return filterNFLGames(competitors, selectedFilter.value)
           case 'ncaa-basketball':
@@ -287,9 +285,21 @@ export default {
       fetchData(true)
     }
 
+    // Watch for filter changes and save to localStorage
+    watch(selectedFilter, (newFilter) => {
+      localStorage.setItem('selectedFilter', newFilter)
+    })
+
     const setActiveLeague = (league) => {
       activeLeague.value = league
-      selectedFilter.value = 'all' // Reset filter when switching leagues
+      localStorage.setItem('activeLeague', league) // Save to localStorage
+      
+      // Set appropriate default filter for each sport
+      if (league === 'ncaa-football' || league === 'ncaa-basketball') {
+        selectedFilter.value = 'top25' // NCAA Football and Basketball default to Top 25
+      } else {
+        selectedFilter.value = 'all' // NFL defaults to All Games
+      }
       
       // Force reset loading states
       loading.value = false
@@ -299,7 +309,7 @@ export default {
     }
 
     // Filtering functions
-    const filterNCAAGames = (competitors, groups, filter) => {
+    const filterNCAAFootballGames = (competitors, groups, filter) => {
       switch (filter) {
         case 'top25':
           return competitors.some(comp => 
