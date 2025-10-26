@@ -382,19 +382,14 @@ export default {
             comp.curatedRank && comp.curatedRank.current <= 25
           )
         case 'acc':
-          // ACC teams - conferenceId 16
           return competitors.some(comp => comp.team?.conferenceId === '16')
         case 'big10':
-          // Big Ten teams - conferenceId 7  
           return competitors.some(comp => comp.team?.conferenceId === '7')
         case 'big12':
-          // Big 12 teams - conferenceId 8
           return competitors.some(comp => comp.team?.conferenceId === '8')
         case 'sec':
-          // SEC teams - conferenceId 23
           return competitors.some(comp => comp.team?.conferenceId === '23')
         case 'big-east':
-          // Big East teams - conferenceId 4
           return competitors.some(comp => comp.team?.conferenceId === '4')
         default:
           return true

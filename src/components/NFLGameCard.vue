@@ -75,30 +75,6 @@
         </div>
       </div>
 
-      <!-- Live Game State -->
-      <div class="live-game-state" v-if="gameInProgress">
-        <div class="game-clock">
-          <div class="clock-display">
-            <span class="time">{{ status.displayClock || '0:00' }}</span>
-            <span class="quarter">{{ status.period }}{{ getOrdinalSuffix(status.period) }} Quarter</span>
-          </div>
-        </div>
-        
-        <div class="situation" v-if="situation">
-          <div class="down-distance">
-            <span class="down-badge">{{ situation.down }}{{ getOrdinalSuffix(situation.down) }}</span>
-            <span class="distance">{{ situation.distance }} yards</span>
-          </div>
-          <div class="possession">
-            <span class="possession-team">{{ situation.possessionText }}</span>
-          </div>
-        </div>
-        
-        <div class="last-play" v-if="situation?.lastPlay">
-          <div class="last-play-header">Last Play</div>
-          <div class="last-play-text">{{ situation.lastPlay.text }}</div>
-        </div>
-      </div>
 
 
       <!-- Betting Information -->
@@ -161,24 +137,22 @@ export default {
     const venue = computed(() => competition.value?.venue?.fullName || 'TBD')
     const broadcast = computed(() => competition.value?.broadcast || competition.value?.broadcasts?.[0]?.names?.[0])
     const weather = computed(() => props.game.weather?.displayValue)
-    const situation = computed(() => competition.value?.situation)
     const status = computed(() => competition.value?.status)
     const betting = computed(() => competition.value?.odds?.[0])
     
-    const gameInProgress = computed(() => status.value?.type?.state === 'in')
     const gameCompleted = computed(() => status.value?.type?.completed)
     const gameScheduled = computed(() => status.value?.type?.state === 'pre')
     
     const statusClass = computed(() => {
       if (gameCompleted.value) return 'completed'
-      if (gameInProgress.value) return 'in-progress'
+      if (status.value?.type?.state === 'in') return 'in-progress'
       return 'scheduled'
     })
     
     const statusText = computed(() => {
       if (gameCompleted.value) return 'Final'
-      if (gameInProgress.value) {
-        return `${status.value.displayClock} - ${status.value.period}${getOrdinalSuffix(status.value.period)}`
+      if (status.value?.type?.state === 'in') {
+        return `${status.value?.period || 1}${getOrdinalSuffix(status.value?.period || 1)} Quarter`
       }
       return status.value?.type?.shortDetail || 'Scheduled'
     })
@@ -331,95 +305,6 @@ export default {
 }
 
 /* Live Game State Styles */
-.live-game-state {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  color: white;
-  border: 1px solid #374151;
-}
-
-.game-clock {
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-.clock-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.time {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #10b981;
-  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-}
-
-.quarter {
-  font-size: 0.9rem;
-  color: #9ca3af;
-  font-weight: 500;
-}
-
-.situation {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
-
-.down-distance {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.down-badge {
-  background: #ef4444;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.distance {
-  color: #e5e7eb;
-  font-weight: 500;
-}
-
-.possession {
-  color: #10b981;
-  font-weight: 600;
-}
-
-.last-play {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
-  padding: 12px;
-}
-
-.last-play-header {
-  font-size: 0.8rem;
-  color: #9ca3af;
-  font-weight: 600;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.last-play-text {
-  color: #e5e7eb;
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
 
 /* Team Color Integration */
 .team {
