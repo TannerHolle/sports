@@ -463,10 +463,10 @@ export default {
         clearInterval(refreshInterval.value)
       }
       
-      // Set up auto-refresh every 20 seconds
+      // Set up auto-refresh every 15 seconds
       refreshInterval.value = setInterval(() => {
         fetchData()
-      }, 20000) // 20 seconds
+      }, 15000) // 15 seconds
     }
 
     const stopAutoRefresh = () => {
