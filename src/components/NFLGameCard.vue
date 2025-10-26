@@ -74,7 +74,17 @@
         </div>
       </div>
 
-
+      <!-- Game Situation -->
+      <div class="game-situation" v-if="situation && !isCollapsed">
+        <div class="situation-content">
+          <div class="down-distance" v-if="situation.downDistanceText">
+            <span class="situation-text">{{ situation.downDistanceText }}</span>
+          </div>
+          <div class="last-play" v-if="situation.lastPlay?.text">
+            <span class="situation-text">{{ situation.lastPlay.text }}</span>
+          </div>
+        </div>
+      </div>
 
       <!-- Betting Information -->
       <div class="betting-info" v-if="betting && !isCollapsed">
@@ -136,6 +146,7 @@ export default {
     const venue = computed(() => competition.value?.venue?.fullName || 'TBD')
     const broadcast = computed(() => competition.value?.broadcast || competition.value?.broadcasts?.[0]?.names?.[0])
     const status = computed(() => competition.value?.status)
+    const situation = computed(() => competition.value?.situation)
     const betting = computed(() => competition.value?.odds?.[0])
     
     const gameCompleted = computed(() => status.value?.type?.completed)
@@ -258,6 +269,7 @@ export default {
       competitors,
       venue,
       broadcast,
+      situation,
       betting,
       statusClass,
       statusText,
@@ -277,6 +289,37 @@ export default {
 </script>
 
 <style scoped>
+
+/* Game Situation */
+.game-situation {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  border: 1px solid #e2e8f0;
+}
+
+.situation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.down-distance {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+.last-play {
+  color: #4b5563;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.situation-text {
+  display: block;
+}
 
 .conference-badge {
   background: #4f46e5;

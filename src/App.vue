@@ -277,6 +277,8 @@ export default {
             week: null
           }
         }
+
+        console.log('🎮 Response Data:', response.data)
         
         games.value = response.data.events || []
         

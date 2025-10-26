@@ -184,6 +184,11 @@ export default {
 
     const toggleCollapsed = () => {
       isCollapsed.value = !isCollapsed.value
+      
+      // Log event data when expanding the card
+      if (!isCollapsed.value) {
+        console.log('🎓 NCAA Football Card Expanded - Event Data:', props.game)
+      }
     }
 
     const getFavoriteTeam = () => {
