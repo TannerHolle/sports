@@ -150,7 +150,9 @@ export default {
     const statusText = computed(() => {
       if (gameCompleted.value) return 'Final'
       if (status.value?.type?.state === 'in') {
-        return `${status.value?.period || 1}${getOrdinalSuffix(status.value?.period || 1)} Quarter`
+        const time = status.value?.displayClock || '0:00'
+        const quarter = `${status.value?.period || 1}${getOrdinalSuffix(status.value?.period || 1)}`
+        return `${time} - ${quarter} Quarter`
       }
       return status.value?.type?.shortDetail || 'Scheduled'
     })
