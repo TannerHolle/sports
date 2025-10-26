@@ -123,6 +123,50 @@ body {
   gap: 8px;
 }
 
+/* League Tabs */
+.league-tabs {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0;
+}
+
+.tab-buttons {
+  display: flex;
+  gap: 0;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  padding: 16px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.tab-btn:hover {
+  color: #374151;
+  background: #f8fafc;
+}
+
+.tab-btn.active {
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
+  background: #f8fafc;
+}
+
+.tab-icon {
+  font-size: 1.2rem;
+}
+
 /* Filters */
 .filters {
   background: #f8fafc;

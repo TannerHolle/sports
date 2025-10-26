@@ -4,7 +4,7 @@
       <div class="container">
         <h1 class="title">
           <span class="title-icon">🏈</span>
-          College Football Scoreboard
+          Football Scoreboard
         </h1>
         <div class="header-info">
           <span class="season-info">{{ seasonInfo }}</span>
@@ -25,18 +25,53 @@
       </div>
     </header>
 
+    <!-- League Tabs -->
+    <div class="league-tabs">
+      <div class="container">
+        <div class="tab-buttons">
+          <button 
+            @click="setActiveLeague('ncaa')" 
+            :class="{ active: activeLeague === 'ncaa' }"
+            class="tab-btn"
+          >
+            <span class="tab-icon">🎓</span>
+            NCAA Football
+          </button>
+          <button 
+            @click="setActiveLeague('nfl')" 
+            :class="{ active: activeLeague === 'nfl' }"
+            class="tab-btn"
+          >
+            <span class="tab-icon">🏈</span>
+            NFL
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Filters -->
     <div class="filters">
       <div class="container">
         <div class="filter-group">
           <label class="filter-label">Filter by:</label>
           <select v-model="selectedFilter" class="filter-select">
-            <option value="all">All Games</option>
-            <option value="top25">Top 25 Only</option>
-            <option value="sec">SEC</option>
-            <option value="big10">Big Ten</option>
-            <option value="acc">ACC</option>
-            <option value="big12">Big 12</option>
+            <option v-if="activeLeague === 'ncaa'" value="all">All Games</option>
+            <option v-if="activeLeague === 'ncaa'" value="top25">Top 25 Only</option>
+            <option v-if="activeLeague === 'ncaa'" value="sec">SEC</option>
+            <option v-if="activeLeague === 'ncaa'" value="big10">Big Ten</option>
+            <option v-if="activeLeague === 'ncaa'" value="acc">ACC</option>
+            <option v-if="activeLeague === 'ncaa'" value="big12">Big 12</option>
+            <option v-if="activeLeague === 'nfl'" value="all">All Games</option>
+            <option v-if="activeLeague === 'nfl'" value="afc">AFC</option>
+            <option v-if="activeLeague === 'nfl'" value="nfc">NFC</option>
+            <option v-if="activeLeague === 'nfl'" value="afc-east">AFC East</option>
+            <option v-if="activeLeague === 'nfl'" value="afc-west">AFC West</option>
+            <option v-if="activeLeague === 'nfl'" value="afc-north">AFC North</option>
+            <option v-if="activeLeague === 'nfl'" value="afc-south">AFC South</option>
+            <option v-if="activeLeague === 'nfl'" value="nfc-east">NFC East</option>
+            <option v-if="activeLeague === 'nfl'" value="nfc-west">NFC West</option>
+            <option v-if="activeLeague === 'nfl'" value="nfc-north">NFC North</option>
+            <option v-if="activeLeague === 'nfl'" value="nfc-south">NFC South</option>
           </select>
         </div>
       </div>
@@ -61,7 +96,14 @@
         </div>
 
         <div v-else class="games-grid">
-          <GameCard 
+          <NCAAFootballCard 
+            v-if="activeLeague === 'ncaa'"
+            v-for="game in filteredGames" 
+            :key="game.id" 
+            :game="game" 
+          />
+          <NFLGameCard 
+            v-if="activeLeague === 'nfl'"
             v-for="game in filteredGames" 
             :key="game.id" 
             :game="game" 
@@ -75,12 +117,14 @@
 <script>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import axios from 'axios'
-import GameCard from './components/GameCard.vue'
+import NCAAFootballCard from './components/NCAAFootballCard.vue'
+import NFLGameCard from './components/NFLGameCard.vue'
 
 export default {
   name: 'App',
   components: {
-    GameCard
+    NCAAFootballCard,
+    NFLGameCard
   },
   setup() {
     const games = ref([])
@@ -90,6 +134,7 @@ export default {
     const seasonData = ref(null)
     const refreshInterval = ref(null)
     const selectedFilter = ref('all')
+    const activeLeague = ref('ncaa')
 
     const seasonInfo = computed(() => {
       if (!seasonData.value) return ''
@@ -107,22 +152,87 @@ export default {
         const competitors = competition.competitors || []
         const groups = competition.groups
         
-        switch (selectedFilter.value) {
-          case 'top25':
-            return competitors.some(comp => 
-              comp.curatedRank && comp.curatedRank.current <= 25
-            )
-          case 'sec':
-            return groups?.id === '8' || groups?.shortName === 'SEC'
-          case 'big10':
-            return groups?.id === '5' || groups?.shortName === 'Big Ten'
-          case 'acc':
-            return groups?.id === '1' || groups?.shortName === 'ACC'
-          case 'big12':
-            return groups?.id === '4' || groups?.shortName === 'Big 12'
-          default:
-            return true
+        if (activeLeague.value === 'ncaa') {
+          switch (selectedFilter.value) {
+            case 'top25':
+              return competitors.some(comp => 
+                comp.curatedRank && comp.curatedRank.current <= 25
+              )
+            case 'sec':
+              return groups?.id === '8' || groups?.shortName === 'SEC'
+            case 'big10':
+              return groups?.id === '5' || groups?.shortName === 'Big Ten'
+            case 'acc':
+              return groups?.id === '1' || groups?.shortName === 'ACC'
+            case 'big12':
+              return groups?.id === '4' || groups?.shortName === 'Big 12'
+            default:
+              return true
+          }
+        } else if (activeLeague.value === 'nfl') {
+          // NFL filtering logic - show games where at least one team is from the selected conference/division
+          switch (selectedFilter.value) {
+            case 'afc':
+              return competitors.some(comp => {
+                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+                const isAFC = isAFCTeam(teamName)
+                console.log(`AFC filter: ${teamName} (${comp.team?.displayName}) -> ${isAFC}`)
+                console.log('Team data:', comp.team)
+                return isAFC
+              })
+            case 'nfc':
+              return competitors.some(comp => {
+                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+                const isNFC = isNFCTeam(teamName)
+                console.log(`NFC filter: ${teamName} -> ${isNFC}`)
+                return isNFC
+              })
+            case 'afc-east':
+              return competitors.some(comp => {
+                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+                return isAFCEastTeam(teamName)
+              })
+            case 'afc-west':
+              return competitors.some(comp => {
+                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+                return isAFCWestTeam(teamName)
+              })
+            case 'afc-north':
+              return competitors.some(comp => {
+                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+                return isAFCNorthTeam(teamName)
+              })
+            case 'afc-south':
+              return competitors.some(comp => {
+                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+                return isAFCSouthTeam(teamName)
+              })
+            case 'nfc-east':
+              return competitors.some(comp => {
+                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+                return isNFCEastTeam(teamName)
+              })
+            case 'nfc-west':
+              return competitors.some(comp => {
+                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+                return isNFCWestTeam(teamName)
+              })
+            case 'nfc-north':
+              return competitors.some(comp => {
+                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+                return isNFCNorthTeam(teamName)
+              })
+            case 'nfc-south':
+              return competitors.some(comp => {
+                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+                return isNFCSouthTeam(teamName)
+              })
+            default:
+              return true
+          }
         }
+        
+        return true
       })
     })
 
@@ -134,7 +244,11 @@ export default {
       error.value = null
       
       try {
-        const response = await axios.get('https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard')
+        const apiUrl = activeLeague.value === 'ncaa' 
+          ? 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard'
+          : 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+        
+        const response = await axios.get(apiUrl)
         
         seasonData.value = {
           season: response.data.season,
@@ -155,6 +269,63 @@ export default {
 
     const refreshData = () => {
       fetchData(true)
+    }
+
+    const setActiveLeague = (league) => {
+      activeLeague.value = league
+      selectedFilter.value = 'all' // Reset filter when switching leagues
+      fetchData(true) // Fetch data for the new league
+    }
+
+    // NFL Team Classification Functions
+    const isAFCTeam = (teamName) => {
+      const afcTeams = ['BUF', 'MIA', 'NE', 'NYJ', 'BAL', 'CIN', 'CLE', 'PIT', 'HOU', 'IND', 'JAX', 'TEN', 'DEN', 'KC', 'LV', 'LAC']
+      return afcTeams.includes(teamName.toUpperCase())
+    }
+
+    const isNFCTeam = (teamName) => {
+      const nfcTeams = ['DAL', 'NYG', 'PHI', 'WAS', 'CHI', 'DET', 'GB', 'MIN', 'ATL', 'CAR', 'NO', 'TB', 'ARI', 'LAR', 'SF', 'SEA']
+      return nfcTeams.includes(teamName.toUpperCase())
+    }
+
+    const isAFCEastTeam = (teamName) => {
+      const afcEastTeams = ['BUF', 'MIA', 'NE', 'NYJ']
+      return afcEastTeams.includes(teamName.toUpperCase())
+    }
+
+    const isAFCWestTeam = (teamName) => {
+      const afcWestTeams = ['DEN', 'KC', 'LV', 'LAC']
+      return afcWestTeams.includes(teamName.toUpperCase())
+    }
+
+    const isAFCNorthTeam = (teamName) => {
+      const afcNorthTeams = ['BAL', 'CIN', 'CLE', 'PIT']
+      return afcNorthTeams.includes(teamName.toUpperCase())
+    }
+
+    const isAFCSouthTeam = (teamName) => {
+      const afcSouthTeams = ['HOU', 'IND', 'JAX', 'TEN']
+      return afcSouthTeams.includes(teamName.toUpperCase())
+    }
+
+    const isNFCEastTeam = (teamName) => {
+      const nfcEastTeams = ['DAL', 'NYG', 'PHI', 'WAS']
+      return nfcEastTeams.includes(teamName.toUpperCase())
+    }
+
+    const isNFCWestTeam = (teamName) => {
+      const nfcWestTeams = ['ARI', 'LAR', 'SF', 'SEA']
+      return nfcWestTeams.includes(teamName.toUpperCase())
+    }
+
+    const isNFCNorthTeam = (teamName) => {
+      const nfcNorthTeams = ['CHI', 'DET', 'GB', 'MIN']
+      return nfcNorthTeams.includes(teamName.toUpperCase())
+    }
+
+    const isNFCSouthTeam = (teamName) => {
+      const nfcSouthTeams = ['ATL', 'CAR', 'NO', 'TB']
+      return nfcSouthTeams.includes(teamName.toUpperCase())
     }
 
     const startAutoRefresh = () => {
@@ -202,8 +373,10 @@ export default {
       refreshInterval,
       selectedFilter,
       filteredGames,
+      activeLeague,
       fetchData,
       refreshData,
+      setActiveLeague,
       startAutoRefresh,
       stopAutoRefresh,
       toggleAutoRefresh
