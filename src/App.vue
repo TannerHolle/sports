@@ -30,20 +30,14 @@
       <div class="container">
         <div class="tab-buttons">
           <button 
-            @click="setActiveLeague('ncaa')" 
-            :class="{ active: activeLeague === 'ncaa' }"
+            v-for="sport in sports" 
+            :key="sport.id"
+            @click="setActiveLeague(sport.id)" 
+            :class="{ active: activeLeague === sport.id }"
             class="tab-btn"
           >
-            <span class="tab-icon">🎓</span>
-            NCAA Football
-          </button>
-          <button 
-            @click="setActiveLeague('nfl')" 
-            :class="{ active: activeLeague === 'nfl' }"
-            class="tab-btn"
-          >
-            <span class="tab-icon">🏈</span>
-            NFL
+            <span class="tab-icon">{{ sport.icon }}</span>
+            {{ sport.name }}
           </button>
         </div>
       </div>
@@ -55,23 +49,13 @@
         <div class="filter-group">
           <label class="filter-label">Filter by:</label>
           <select v-model="selectedFilter" class="filter-select">
-            <option v-if="activeLeague === 'ncaa'" value="all">All Games</option>
-            <option v-if="activeLeague === 'ncaa'" value="top25">Top 25 Only</option>
-            <option v-if="activeLeague === 'ncaa'" value="sec">SEC</option>
-            <option v-if="activeLeague === 'ncaa'" value="big10">Big Ten</option>
-            <option v-if="activeLeague === 'ncaa'" value="acc">ACC</option>
-            <option v-if="activeLeague === 'ncaa'" value="big12">Big 12</option>
-            <option v-if="activeLeague === 'nfl'" value="all">All Games</option>
-            <option v-if="activeLeague === 'nfl'" value="afc">AFC</option>
-            <option v-if="activeLeague === 'nfl'" value="nfc">NFC</option>
-            <option v-if="activeLeague === 'nfl'" value="afc-east">AFC East</option>
-            <option v-if="activeLeague === 'nfl'" value="afc-west">AFC West</option>
-            <option v-if="activeLeague === 'nfl'" value="afc-north">AFC North</option>
-            <option v-if="activeLeague === 'nfl'" value="afc-south">AFC South</option>
-            <option v-if="activeLeague === 'nfl'" value="nfc-east">NFC East</option>
-            <option v-if="activeLeague === 'nfl'" value="nfc-west">NFC West</option>
-            <option v-if="activeLeague === 'nfl'" value="nfc-north">NFC North</option>
-            <option v-if="activeLeague === 'nfl'" value="nfc-south">NFC South</option>
+            <option 
+              v-for="filter in currentSportFilters" 
+              :key="filter.value" 
+              :value="filter.value"
+            >
+              {{ filter.label }}
+            </option>
           </select>
         </div>
       </div>
@@ -96,14 +80,8 @@
         </div>
 
         <div v-else class="games-grid">
-          <NCAAFootballCard 
-            v-if="activeLeague === 'ncaa'"
-            v-for="game in filteredGames" 
-            :key="game.id" 
-            :game="game" 
-          />
-          <NFLGameCard 
-            v-if="activeLeague === 'nfl'"
+          <component 
+            :is="currentGameCardComponent"
             v-for="game in filteredGames" 
             :key="game.id" 
             :game="game" 
@@ -119,12 +97,14 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import axios from 'axios'
 import NCAAFootballCard from './components/NCAAFootballCard.vue'
 import NFLGameCard from './components/NFLGameCard.vue'
+import CollegeBasketballCard from './components/CollegeBasketballCard.vue'
 
 export default {
   name: 'App',
   components: {
     NCAAFootballCard,
-    NFLGameCard
+    NFLGameCard,
+    CollegeBasketballCard
   },
   setup() {
     const games = ref([])
@@ -136,10 +116,87 @@ export default {
     const selectedFilter = ref('all')
     const activeLeague = ref('ncaa')
 
+    // Sports configuration
+    const sports = ref([
+      {
+        id: 'ncaa',
+        name: 'NCAA Football',
+        icon: '🎓',
+        apiUrl: 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard',
+        component: 'NCAAFootballCard',
+        filters: [
+          { value: 'all', label: 'All Games' },
+          { value: 'top25', label: 'Top 25 Only' },
+          { value: 'sec', label: 'SEC' },
+          { value: 'big10', label: 'Big Ten' },
+          { value: 'acc', label: 'ACC' },
+          { value: 'big12', label: 'Big 12' }
+        ]
+      },
+      {
+        id: 'nfl',
+        name: 'NFL',
+        icon: '🏈',
+        apiUrl: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',
+        component: 'NFLGameCard',
+        filters: [
+          { value: 'all', label: 'All Games' },
+          { value: 'afc', label: 'AFC' },
+          { value: 'nfc', label: 'NFC' },
+          { value: 'afc-east', label: 'AFC East' },
+          { value: 'afc-west', label: 'AFC West' },
+          { value: 'afc-north', label: 'AFC North' },
+          { value: 'afc-south', label: 'AFC South' },
+          { value: 'nfc-east', label: 'NFC East' },
+          { value: 'nfc-west', label: 'NFC West' },
+          { value: 'nfc-north', label: 'NFC North' },
+          { value: 'nfc-south', label: 'NFC South' }
+        ]
+      },
+      {
+        id: 'ncaa-basketball',
+        name: 'NCAA Basketball',
+        icon: '🏀',
+        apiUrl: 'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard',
+        component: 'CollegeBasketballCard',
+        filters: [
+          { value: 'all', label: 'All Games' },
+          { value: 'top25', label: 'Top 25 Only' },
+          { value: 'acc', label: 'ACC' },
+          { value: 'big10', label: 'Big Ten' },
+          { value: 'big12', label: 'Big 12' },
+          { value: 'sec', label: 'SEC' },
+          { value: 'pac12', label: 'Pac-12' },
+          { value: 'big-east', label: 'Big East' }
+        ]
+      }
+    ])
+
     const seasonInfo = computed(() => {
       if (!seasonData.value) return ''
       const { season, week } = seasonData.value
-      return `${season.year} Season - Week ${week.number}`
+      
+      if (activeLeague.value === 'ncaa-basketball') {
+        // Basketball shows season without week
+        return `${season.year} Season`
+      } else if (week) {
+        // Football shows season with week
+        return `${season.year} Season - Week ${week.number}`
+      } else {
+        return `${season.year} Season`
+      }
+    })
+
+    const currentSport = computed(() => {
+      return sports.value.find(sport => sport.id === activeLeague.value)
+    })
+
+    const currentSportFilters = computed(() => {
+      return currentSport.value?.filters || []
+    })
+
+    const currentGameCardComponent = computed(() => {
+      return currentSport.value?.component || 'NCAAFootballCard'
     })
 
     const filteredGames = computed(() => {
@@ -152,87 +209,17 @@ export default {
         const competitors = competition.competitors || []
         const groups = competition.groups
         
-        if (activeLeague.value === 'ncaa') {
-          switch (selectedFilter.value) {
-            case 'top25':
-              return competitors.some(comp => 
-                comp.curatedRank && comp.curatedRank.current <= 25
-              )
-            case 'sec':
-              return groups?.id === '8' || groups?.shortName === 'SEC'
-            case 'big10':
-              return groups?.id === '5' || groups?.shortName === 'Big Ten'
-            case 'acc':
-              return groups?.id === '1' || groups?.shortName === 'ACC'
-            case 'big12':
-              return groups?.id === '4' || groups?.shortName === 'Big 12'
-            default:
-              return true
-          }
-        } else if (activeLeague.value === 'nfl') {
-          // NFL filtering logic - show games where at least one team is from the selected conference/division
-          switch (selectedFilter.value) {
-            case 'afc':
-              return competitors.some(comp => {
-                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
-                const isAFC = isAFCTeam(teamName)
-                console.log(`AFC filter: ${teamName} (${comp.team?.displayName}) -> ${isAFC}`)
-                console.log('Team data:', comp.team)
-                return isAFC
-              })
-            case 'nfc':
-              return competitors.some(comp => {
-                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
-                const isNFC = isNFCTeam(teamName)
-                console.log(`NFC filter: ${teamName} -> ${isNFC}`)
-                return isNFC
-              })
-            case 'afc-east':
-              return competitors.some(comp => {
-                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
-                return isAFCEastTeam(teamName)
-              })
-            case 'afc-west':
-              return competitors.some(comp => {
-                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
-                return isAFCWestTeam(teamName)
-              })
-            case 'afc-north':
-              return competitors.some(comp => {
-                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
-                return isAFCNorthTeam(teamName)
-              })
-            case 'afc-south':
-              return competitors.some(comp => {
-                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
-                return isAFCSouthTeam(teamName)
-              })
-            case 'nfc-east':
-              return competitors.some(comp => {
-                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
-                return isNFCEastTeam(teamName)
-              })
-            case 'nfc-west':
-              return competitors.some(comp => {
-                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
-                return isNFCWestTeam(teamName)
-              })
-            case 'nfc-north':
-              return competitors.some(comp => {
-                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
-                return isNFCNorthTeam(teamName)
-              })
-            case 'nfc-south':
-              return competitors.some(comp => {
-                const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
-                return isNFCSouthTeam(teamName)
-              })
-            default:
-              return true
-          }
+        // Handle filtering based on current sport
+        switch (activeLeague.value) {
+          case 'ncaa':
+            return filterNCAAGames(competitors, groups, selectedFilter.value)
+          case 'nfl':
+            return filterNFLGames(competitors, selectedFilter.value)
+          case 'ncaa-basketball':
+            return filterNCAABasketballGames(competitors, groups, selectedFilter.value)
+          default:
+            return true
         }
-        
-        return true
       })
     })
 
@@ -244,26 +231,56 @@ export default {
       error.value = null
       
       try {
-        const apiUrl = activeLeague.value === 'ncaa' 
-          ? 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard'
-          : 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+        const apiUrl = currentSport.value?.apiUrl
+        
+        
+        if (!apiUrl) {
+          throw new Error('No API URL configured for current sport')
+        }
         
         const response = await axios.get(apiUrl)
         
-        seasonData.value = {
-          season: response.data.season,
-          week: response.data.week
+        
+        // Handle different data structures for different sports
+        try {
+          if (activeLeague.value === 'ncaa-basketball') {
+            // Basketball doesn't have week data
+            seasonData.value = {
+              season: response.data.season || { year: new Date().getFullYear() },
+              week: null
+            }
+          } else {
+            // Football has week data
+            seasonData.value = {
+              season: response.data.season || { year: new Date().getFullYear() },
+              week: response.data.week || null
+            }
+          }
+        } catch (seasonError) {
+          console.error('Error setting season data:', seasonError)
+          seasonData.value = {
+            season: { year: new Date().getFullYear() },
+            week: null
+          }
         }
         
         games.value = response.data.events || []
+        
       } catch (err) {
         error.value = err.message || 'Failed to fetch data'
         console.error('Error fetching data:', err)
+        console.error('Error details:', err.response?.data || err.message)
       } finally {
         loading.value = false
         if (isManual) {
           manualLoading.value = false
         }
+        
+        // Force clear loading states after a short delay to ensure they're reset
+        setTimeout(() => {
+          loading.value = false
+          manualLoading.value = false
+        }, 100)
       }
     }
 
@@ -274,7 +291,112 @@ export default {
     const setActiveLeague = (league) => {
       activeLeague.value = league
       selectedFilter.value = 'all' // Reset filter when switching leagues
+      
+      // Force reset loading states
+      loading.value = false
+      manualLoading.value = false
+      
       fetchData(true) // Fetch data for the new league
+    }
+
+    // Filtering functions
+    const filterNCAAGames = (competitors, groups, filter) => {
+      switch (filter) {
+        case 'top25':
+          return competitors.some(comp => 
+            comp.curatedRank && comp.curatedRank.current <= 25
+          )
+        case 'sec':
+          return groups?.id === '8' || groups?.shortName === 'SEC'
+        case 'big10':
+          return groups?.id === '5' || groups?.shortName === 'Big Ten'
+        case 'acc':
+          return groups?.id === '1' || groups?.shortName === 'ACC'
+        case 'big12':
+          return groups?.id === '4' || groups?.shortName === 'Big 12'
+        default:
+          return true
+      }
+    }
+
+    const filterNFLGames = (competitors, filter) => {
+      switch (filter) {
+        case 'afc':
+          return competitors.some(comp => {
+            const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+            return isAFCTeam(teamName)
+          })
+        case 'nfc':
+          return competitors.some(comp => {
+            const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+            return isNFCTeam(teamName)
+          })
+        case 'afc-east':
+          return competitors.some(comp => {
+            const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+            return isAFCEastTeam(teamName)
+          })
+        case 'afc-west':
+          return competitors.some(comp => {
+            const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+            return isAFCWestTeam(teamName)
+          })
+        case 'afc-north':
+          return competitors.some(comp => {
+            const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+            return isAFCNorthTeam(teamName)
+          })
+        case 'afc-south':
+          return competitors.some(comp => {
+            const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+            return isAFCSouthTeam(teamName)
+          })
+        case 'nfc-east':
+          return competitors.some(comp => {
+            const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+            return isNFCEastTeam(teamName)
+          })
+        case 'nfc-west':
+          return competitors.some(comp => {
+            const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+            return isNFCWestTeam(teamName)
+          })
+        case 'nfc-north':
+          return competitors.some(comp => {
+            const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+            return isNFCNorthTeam(teamName)
+          })
+        case 'nfc-south':
+          return competitors.some(comp => {
+            const teamName = comp.team?.abbreviation || comp.team?.displayName || ''
+            return isNFCSouthTeam(teamName)
+          })
+        default:
+          return true
+      }
+    }
+
+    const filterNCAABasketballGames = (competitors, groups, filter) => {
+      switch (filter) {
+        case 'top25':
+          return competitors.some(comp => 
+            comp.curatedRank && comp.curatedRank.current <= 25
+          )
+        case 'acc':
+          return groups?.id === '1' || groups?.shortName === 'ACC'
+        case 'big10':
+          return groups?.id === '5' || groups?.shortName === 'Big Ten'
+        case 'big12':
+          return groups?.id === '4' || groups?.shortName === 'Big 12'
+        case 'sec':
+          return groups?.id === '8' || groups?.shortName === 'SEC'
+        case 'pac12':
+          return groups?.id === '9' || groups?.shortName === 'Pac-12'
+        case 'big-east':
+          return groups?.id === '3' || groups?.shortName === 'Big East'
+        default:
+          return true
+      }
     }
 
     // NFL Team Classification Functions
@@ -374,6 +496,10 @@ export default {
       selectedFilter,
       filteredGames,
       activeLeague,
+      sports,
+      currentSport,
+      currentSportFilters,
+      currentGameCardComponent,
       fetchData,
       refreshData,
       setActiveLeague,
