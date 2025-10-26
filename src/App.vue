@@ -46,17 +46,27 @@
     <!-- Filters -->
     <div class="filters">
       <div class="container">
-        <div class="filter-group">
-          <label class="filter-label">Filter by:</label>
-          <select v-model="selectedFilter" class="filter-select">
-            <option 
-              v-for="filter in currentSportFilters" 
-              :key="filter.value" 
-              :value="filter.value"
-            >
-              {{ filter.label }}
-            </option>
-          </select>
+        <div class="filter-row">
+          <div class="filter-group">
+            <label class="filter-label">Filter by:</label>
+            <select v-model="selectedFilter" class="filter-select">
+              <option 
+                v-for="filter in currentSportFilters" 
+                :key="filter.value" 
+                :value="filter.value"
+              >
+                {{ filter.label }}
+              </option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Date:</label>
+            <input 
+              v-model="selectedDate" 
+              type="date" 
+              class="date-input"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -114,6 +124,7 @@ export default {
     const seasonData = ref(null)
     const refreshInterval = ref(null)
     const selectedFilter = ref(localStorage.getItem('selectedFilter') || 'top25')
+    const selectedDate = ref('')
     const activeLeague = ref(localStorage.getItem('activeLeague') || 'ncaa-football')
 
     // Sports configuration
@@ -228,11 +239,17 @@ export default {
       error.value = null
       
       try {
-        const apiUrl = currentSport.value?.apiUrl
+        const baseApiUrl = currentSport.value?.apiUrl
         
-        
-        if (!apiUrl) {
+        if (!baseApiUrl) {
           throw new Error('No API URL configured for current sport')
+        }
+        
+        // Add date parameter only if a date is selected
+        let apiUrl = baseApiUrl
+        if (selectedDate.value) {
+          const formattedDate = selectedDate.value.replace(/-/g, '')
+          apiUrl = `${baseApiUrl}?dates=${formattedDate}`
         }
         
         const response = await axios.get(apiUrl)
@@ -288,6 +305,12 @@ export default {
     // Watch for filter changes and save to localStorage
     watch(selectedFilter, (newFilter) => {
       localStorage.setItem('selectedFilter', newFilter)
+    })
+
+    // Watch for date changes and fetch new data
+    watch(selectedDate, (newDate) => {
+      // Fetch new data when date changes
+      fetchData(true)
     })
 
     const setActiveLeague = (league) => {
@@ -501,6 +524,7 @@ export default {
       seasonInfo,
       refreshInterval,
       selectedFilter,
+      selectedDate,
       filteredGames,
       activeLeague,
       sports,
