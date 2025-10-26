@@ -6,7 +6,6 @@
         <div class="game-meta">
           <span class="venue">{{ venue }}</span>
           <span class="broadcast" v-if="broadcast && !isCollapsed">{{ broadcast }}</span>
-          <span class="weather" v-if="weather && !isCollapsed">{{ weather }}</span>
         </div>
       </div>
       <div class="game-header-right">
@@ -136,7 +135,6 @@ export default {
     const competitors = computed(() => competition.value?.competitors || [])
     const venue = computed(() => competition.value?.venue?.fullName || 'TBD')
     const broadcast = computed(() => competition.value?.broadcast || competition.value?.broadcasts?.[0]?.names?.[0])
-    const weather = computed(() => props.game.weather?.displayValue)
     const status = computed(() => competition.value?.status)
     const betting = computed(() => competition.value?.odds?.[0])
     
@@ -242,12 +240,14 @@ export default {
       
       const primaryColor = `#${competitor.team.color}`
       const alternateColor = competitor.team.alternateColor ? `#${competitor.team.alternateColor}` : '#ffffff'
+      const isWinningTeam = isWinning(competitor)
       
       return {
         '--team-primary-color': primaryColor,
         '--team-alternate-color': alternateColor,
         'border-left': `4px solid ${primaryColor}`,
-        'background': `linear-gradient(90deg, ${primaryColor}15 0%, transparent 100%)`
+        'background': `linear-gradient(90deg, ${primaryColor}15 0%, transparent 100%)`,
+        'box-shadow': isWinningTeam ? `0 0 0 2px ${primaryColor}` : 'none'
       }
     }
 
@@ -256,10 +256,7 @@ export default {
       competitors,
       venue,
       broadcast,
-      weather,
-      situation,
       betting,
-      gameInProgress,
       statusClass,
       statusText,
       getRecord,
@@ -278,11 +275,6 @@ export default {
 </script>
 
 <style scoped>
-.weather {
-  color: #059669;
-  font-weight: 500;
-  font-size: 0.9rem;
-}
 
 .conference-badge {
   background: #4f46e5;
@@ -304,8 +296,6 @@ export default {
   color: #9ca3af;
 }
 
-/* Live Game State Styles */
-
 /* Team Color Integration */
 .team {
   transition: all 0.3s ease;
@@ -316,9 +306,6 @@ export default {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.team.winning {
-  box-shadow: 0 0 0 2px var(--team-primary-color, #10b981);
-}
 
 .team-name {
   color: var(--team-primary-color, #1a1a1a);

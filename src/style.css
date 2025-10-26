@@ -426,9 +426,7 @@ body {
 }
 
 .team.winning {
-  background: #dcfce7;
-  border-color: #16a34a;
-  border-width: 2px;
+  /* No green border for expanded cards - handled by component-specific styles */
 }
 
 .collapsed-team.winning {
