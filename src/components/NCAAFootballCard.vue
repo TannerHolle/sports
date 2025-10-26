@@ -44,6 +44,7 @@
             'away': competitor.homeAway === 'away',
             'winning': isWinning(competitor)
           }"
+          :style="getTeamStyle(competitor)"
         >
           <div class="team-info">
             <img :src="competitor.team.logo" :alt="competitor.team.displayName" class="team-logo" />
@@ -245,6 +246,21 @@ export default {
       return currentScore === Math.max(homeScore, awayScore)
     }
 
+    const getTeamStyle = (competitor) => {
+      if (!competitor.team?.color) return {}
+      
+      const primaryColor = `#${competitor.team.color}`
+      const alternateColor = competitor.team.alternateColor ? `#${competitor.team.alternateColor}` : '#ffffff'
+      const isWinningTeam = isWinning(competitor)
+      
+      return {
+        '--team-primary-color': primaryColor,
+        '--team-alternate-color': alternateColor,
+        'border-left': `4px solid ${primaryColor}`,
+        'background': `linear-gradient(90deg, ${primaryColor}15 0%, transparent 100%)`,
+        'box-shadow': isWinningTeam ? `0 0 0 2px ${primaryColor}` : 'none'
+      }
+    }
 
     return {
       isCollapsed,
@@ -264,8 +280,29 @@ export default {
       getSpreadOdds,
       getHomeTeamName,
       getAwayTeamName,
-      isWinning
+      isWinning,
+      getTeamStyle
     }
   }
 }
 </script>
+
+<style scoped>
+/* Team Color Integration */
+.team {
+  transition: all 0.3s ease;
+}
+
+.team:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.team-name {
+  color: var(--team-primary-color, #1a1a1a);
+  font-weight: 700;
+}
+.score {
+  color: var(--team-primary-color, #1a1a1a);
+}
+</style>
