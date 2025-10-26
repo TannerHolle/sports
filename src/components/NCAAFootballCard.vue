@@ -183,7 +183,7 @@ export default {
     }
 
     const toggleCollapsed = () => {
-      isCollapsed.value = !isCollapsed.values
+      isCollapsed.value = !isCollapsed.value
     }
 
     const getFavoriteTeam = () => {
