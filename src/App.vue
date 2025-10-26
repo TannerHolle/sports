@@ -166,7 +166,6 @@ export default {
           { value: 'big10', label: 'Big Ten' },
           { value: 'big12', label: 'Big 12' },
           { value: 'sec', label: 'SEC' },
-          { value: 'pac12', label: 'Pac-12' },
           { value: 'big-east', label: 'Big East' }
         ]
       }
@@ -383,17 +382,20 @@ export default {
             comp.curatedRank && comp.curatedRank.current <= 25
           )
         case 'acc':
-          return groups?.id === '1' || groups?.shortName === 'ACC'
+          // ACC teams - conferenceId 16
+          return competitors.some(comp => comp.team?.conferenceId === '16')
         case 'big10':
-          return groups?.id === '5' || groups?.shortName === 'Big Ten'
+          // Big Ten teams - conferenceId 7  
+          return competitors.some(comp => comp.team?.conferenceId === '7')
         case 'big12':
-          return groups?.id === '4' || groups?.shortName === 'Big 12'
+          // Big 12 teams - conferenceId 8
+          return competitors.some(comp => comp.team?.conferenceId === '8')
         case 'sec':
-          return groups?.id === '8' || groups?.shortName === 'SEC'
-        case 'pac12':
-          return groups?.id === '9' || groups?.shortName === 'Pac-12'
+          // SEC teams - conferenceId 23
+          return competitors.some(comp => comp.team?.conferenceId === '23')
         case 'big-east':
-          return groups?.id === '3' || groups?.shortName === 'Big East'
+          // Big East teams - conferenceId 4
+          return competitors.some(comp => comp.team?.conferenceId === '4')
         default:
           return true
       }
