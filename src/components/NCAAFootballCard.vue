@@ -245,6 +245,7 @@ export default {
       return currentScore === Math.max(homeScore, awayScore)
     }
 
+
     return {
       isCollapsed,
       competitors,

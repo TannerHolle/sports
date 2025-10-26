@@ -4,7 +4,7 @@
       <div class="container">
         <h1 class="title">
           <span class="title-icon">🏈</span>
-          Football Scoreboard
+          Scoreboard
         </h1>
         <div class="header-info">
           <span class="season-info">{{ seasonInfo }}</span>

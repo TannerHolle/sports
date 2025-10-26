@@ -45,6 +45,7 @@
             'away': competitor.homeAway === 'away',
             'winning': isWinning(competitor)
           }"
+          :style="getTeamStyle(competitor)"
         >
           <div class="team-info">
             <img :src="competitor.team.logo" :alt="competitor.team.displayName" class="team-logo" />
@@ -74,17 +75,28 @@
         </div>
       </div>
 
-      <div class="game-details" v-if="gameInProgress">
-        <div class="situation" v-if="situation">
-          <div class="down-distance">
-            {{ situation.downDistanceText || `${situation.down}${getOrdinalSuffix(situation.down)} & ${situation.distance}` }}
-          </div>
-          <div class="possession">
-            {{ situation.possessionText }}
+      <!-- Live Game State -->
+      <div class="live-game-state" v-if="gameInProgress">
+        <div class="game-clock">
+          <div class="clock-display">
+            <span class="time">{{ status.displayClock || '0:00' }}</span>
+            <span class="quarter">{{ status.period }}{{ getOrdinalSuffix(status.period) }} Quarter</span>
           </div>
         </div>
+        
+        <div class="situation" v-if="situation">
+          <div class="down-distance">
+            <span class="down-badge">{{ situation.down }}{{ getOrdinalSuffix(situation.down) }}</span>
+            <span class="distance">{{ situation.distance }} yards</span>
+          </div>
+          <div class="possession">
+            <span class="possession-team">{{ situation.possessionText }}</span>
+          </div>
+        </div>
+        
         <div class="last-play" v-if="situation?.lastPlay">
-          <strong>Last Play:</strong> {{ situation.lastPlay.text }}
+          <div class="last-play-header">Last Play</div>
+          <div class="last-play-text">{{ situation.lastPlay.text }}</div>
         </div>
       </div>
 
@@ -251,6 +263,20 @@ export default {
       return currentScore === Math.max(homeScore, awayScore)
     }
 
+    const getTeamStyle = (competitor) => {
+      if (!competitor.team?.color) return {}
+      
+      const primaryColor = `#${competitor.team.color}`
+      const alternateColor = competitor.team.alternateColor ? `#${competitor.team.alternateColor}` : '#ffffff'
+      
+      return {
+        '--team-primary-color': primaryColor,
+        '--team-alternate-color': alternateColor,
+        'border-left': `4px solid ${primaryColor}`,
+        'background': `linear-gradient(90deg, ${primaryColor}15 0%, transparent 100%)`
+      }
+    }
+
     return {
       isCollapsed,
       competitors,
@@ -270,7 +296,8 @@ export default {
       getSpreadOdds,
       getHomeTeamName,
       getAwayTeamName,
-      isWinning
+      isWinning,
+      getTeamStyle
     }
   }
 }
@@ -301,6 +328,130 @@ export default {
 
 .division {
   color: #9ca3af;
+}
+
+/* Live Game State Styles */
+.live-game-state {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  color: white;
+  border: 1px solid #374151;
+}
+
+.game-clock {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.clock-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.time {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #10b981;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.quarter {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.situation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.down-distance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.down-badge {
+  background: #ef4444;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.distance {
+  color: #e5e7eb;
+  font-weight: 500;
+}
+
+.possession {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.last-play {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.last-play-header {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.last-play-text {
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Team Color Integration */
+.team {
+  transition: all 0.3s ease;
+}
+
+.team:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.team.winning {
+  box-shadow: 0 0 0 2px var(--team-primary-color, #10b981);
+}
+
+.team-name {
+  color: var(--team-primary-color, #1a1a1a);
+  font-weight: 700;
+}
+
+.score {
+  color: var(--team-primary-color, #1a1a1a);
+}
+
+.conference-badge {
+  background: var(--team-primary-color, #4f46e5);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 6px;
 }
 
 </style>
